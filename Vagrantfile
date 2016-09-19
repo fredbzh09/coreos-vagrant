@@ -9,9 +9,9 @@ CLOUD_CONFIG_PATH = File.join(File.dirname(__FILE__), "user-data")
 CONFIG = File.join(File.dirname(__FILE__), "config.rb")
 
 # Defaults for config options defined in CONFIG
-$num_instances = 1
+$num_instances = 2
 $instance_name_prefix = "core"
-$update_channel = "alpha"
+$update_channel = "stable"
 $image_version = "current"
 $enable_serial_logging = false
 $share_home = false
@@ -141,7 +141,21 @@ Vagrant.configure("2") do |config|
         config.vm.provision :file, :source => "#{CLOUD_CONFIG_PATH}", :destination => "/tmp/vagrantfile-user-data"
         config.vm.provision :shell, :inline => "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/", :privileged => true
       end
-
+  	  if $num_instances == 1
+  	    config.vm.provision "shell", :inline=> " docker pull ansible/centos7-ansible"
+  	    config.vm.provision "shell", :inline=> " docker volume create  --name repo-ansible-playbooks"
+  	    #config.vm.provision "shell", :inline=> " docker run "
+      end
+      if $num_instances == 2
+        #config.vm.provision "shell", :inline=> "mkdir -p /home/core/oss/"
+  	    #config.vm.provision "shell", :inline=> " docker build --rm --tag sonatype/nexus oss/"
+        config.vm.provision "shell", :inline=> " docker volume create --name nexus-data"
+        config.vm.provision "shell", :inline=> " docker run --rm -v nexus-data:/nexus-data --name nexus -p 8081:8081 frekele/nexus"
+        #config.vm.provision "shell", :inline=> " docker volume create  --name repo-nexus"
+        #config.vm.provision "shell", :inline=> " docker run --rm --name nexus -p 8081:8081 frekele/nexus"
+        #config.vm.provision "shell", :inline=> " docker run -d -v repo-nexus:/repo-nexus -p 8081:8081 --name nexus sonatype/nexus:oss"
+  	    #config.vm.provision "shell", :inline=> " docker run "
+      end
     end
   end
 end
